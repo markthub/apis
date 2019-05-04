@@ -1,106 +1,108 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	model "github.com/markthub/apis/api/server/models"
+	"github.com/markthub/apis/api/server/utils"
 	"github.com/smallnest/gen/dbmeta"
 )
 
+// GetAllPayments returns all the payments
 func GetAllPayments(c *gin.Context) {
-	payments := []model.Payment{}
-	DB.Find(&payments)
-	writeJSON(w, &payments)
+	db := c.MustGet("DB").(*gorm.DB)
 
-	page, err := readInt(r, "page", 1)
+	pageParam := c.DefaultQuery("page", "0")
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	pagesize, err := readInt(r, "pagesize", 20)
-	if err != nil || pagesize <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
+		return
 	}
 	offset := (page - 1) * pagesize
 
-	order := r.FormValue("order")
-
-	payments := []*model.Payment{}
-
-	if order != "" {
-		err = DB.Model(&model.Payment{}).Order(order).Offset(offset).Limit(pagesize).Find(&payments).Error
-	} else {
-		err = DB.Model(&model.Payment{}).Offset(offset).Limit(pagesize).Find(&payments).Error
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	payment := []*model.Payment{}
+	if err = db.Model(&model.Payment{}).Offset(offset).Limit(pagesize).Find(&payment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+	utils.Response(c, http.StatusOK, payment)
 }
 
+// GetPayment returns a single payment
 func GetPayment(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
+
 	payment := &model.Payment{}
-	if DB.First(payment, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(payment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	writeJSON(w, payment)
+	utils.Response(c, http.StatusOK, payment)
 }
 
+// AddPayment creates a new payment
 func AddPayment(c *gin.Context) {
 	payment := &model.Payment{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, payment); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(payment); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(payment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(payment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, payment)
+	utils.Response(c, http.StatusOK, payment)
 }
 
+// UpdatePayment updates a payment
 func UpdatePayment(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	payment := &model.Payment{}
-	if DB.First(payment, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(payment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Payment{}
-	if err := readJSON(r, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(updated); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if err := dbmeta.Copy(payment, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := DB.Save(payment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(payment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, payment)
+	utils.Response(c, http.StatusOK, payment)
 }
 
+// DeletePayment deletes a payment
 func DeletePayment(c *gin.Context) {
-	id := ps.ByName("id")
-	payment := &model.Payment{}
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(payment, id).Error != nil {
-		http.NotFound(w, r)
+	payment := &model.Payment{}
+	if err := db.First(payment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(payment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Delete(payment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	utils.Response(c, http.StatusOK, fmt.Sprintf("payment with id %s is deleted", id))
 }

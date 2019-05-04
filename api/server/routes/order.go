@@ -1,106 +1,108 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	model "github.com/markthub/apis/api/server/models"
+	"github.com/markthub/apis/api/server/utils"
 	"github.com/smallnest/gen/dbmeta"
 )
 
+// GetAllOrders return all the orders
 func GetAllOrders(c *gin.Context) {
-	orders := []model.Order{}
-	DB.Find(&orders)
-	writeJSON(w, &orders)
+	db := c.MustGet("DB").(*gorm.DB)
 
-	page, err := readInt(r, "page", 1)
+	pageParam := c.DefaultQuery("page", "0")
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	pagesize, err := readInt(r, "pagesize", 20)
-	if err != nil || pagesize <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
+		return
 	}
 	offset := (page - 1) * pagesize
 
-	order := r.FormValue("order")
-
-	orders := []*model.Order{}
-
-	if order != "" {
-		err = DB.Model(&model.Order{}).Order(order).Offset(offset).Limit(pagesize).Find(&orders).Error
-	} else {
-		err = DB.Model(&model.Order{}).Offset(offset).Limit(pagesize).Find(&orders).Error
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	order := []*model.Order{}
+	if err = db.Model(&model.Order{}).Offset(offset).Limit(pagesize).Find(&order).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+	utils.Response(c, http.StatusOK, order)
 }
 
+// GetOrder returns a single order
 func GetOrder(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
+
 	order := &model.Order{}
-	if DB.First(order, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(order, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	writeJSON(w, order)
+	utils.Response(c, http.StatusOK, order)
 }
 
+// AddOrder creates a new order
 func AddOrder(c *gin.Context) {
 	order := &model.Order{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, order); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(order); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(order).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(order).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, order)
+	utils.Response(c, http.StatusOK, order)
 }
 
+// UpdateOrder updates an order
 func UpdateOrder(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	order := &model.Order{}
-	if DB.First(order, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(order, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Order{}
-	if err := readJSON(r, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(updated); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if err := dbmeta.Copy(order, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := DB.Save(order).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(order).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, order)
+	utils.Response(c, http.StatusOK, order)
 }
 
+// DeleteOrder deletes an order
 func DeleteOrder(c *gin.Context) {
-	id := ps.ByName("id")
-	order := &model.Order{}
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(order, id).Error != nil {
-		http.NotFound(w, r)
+	order := &model.Order{}
+	if err := db.First(order, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(order).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Delete(order).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	utils.Response(c, http.StatusOK, fmt.Sprintf("order with id %s is deleted", id))
 }

@@ -1,106 +1,108 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	model "github.com/markthub/apis/api/server/models"
+	"github.com/markthub/apis/api/server/utils"
 	"github.com/smallnest/gen/dbmeta"
 )
 
+// GetAllShipments returns all the shipments
 func GetAllShipments(c *gin.Context) {
-	shipments := []model.Shipment{}
-	DB.Find(&shipments)
-	writeJSON(w, &shipments)
+	db := c.MustGet("DB").(*gorm.DB)
 
-	page, err := readInt(r, "page", 1)
+	pageParam := c.DefaultQuery("page", "0")
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	pagesize, err := readInt(r, "pagesize", 20)
-	if err != nil || pagesize <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
+		return
 	}
 	offset := (page - 1) * pagesize
 
-	order := r.FormValue("order")
-
-	shipments := []*model.Shipment{}
-
-	if order != "" {
-		err = DB.Model(&model.Shipment{}).Order(order).Offset(offset).Limit(pagesize).Find(&shipments).Error
-	} else {
-		err = DB.Model(&model.Shipment{}).Offset(offset).Limit(pagesize).Find(&shipments).Error
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	shipment := []*model.Shipment{}
+	if err = db.Model(&model.Shipment{}).Offset(offset).Limit(pagesize).Find(&shipment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+	utils.Response(c, http.StatusOK, shipment)
 }
 
+// GetShipment returns a shipment
 func GetShipment(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
+
 	shipment := &model.Shipment{}
-	if DB.First(shipment, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(shipment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	writeJSON(w, shipment)
+	utils.Response(c, http.StatusOK, shipment)
 }
 
+// AddShipment creates a new shipment
 func AddShipment(c *gin.Context) {
 	shipment := &model.Shipment{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, shipment); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(shipment); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(shipment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(shipment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, shipment)
+	utils.Response(c, http.StatusOK, shipment)
 }
 
+// UpdateShipment updates a shipment
 func UpdateShipment(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	shipment := &model.Shipment{}
-	if DB.First(shipment, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(shipment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Shipment{}
-	if err := readJSON(r, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(updated); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if err := dbmeta.Copy(shipment, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := DB.Save(shipment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(shipment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, shipment)
+	utils.Response(c, http.StatusOK, shipment)
 }
 
+// DeleteShipment deletes a shipment
 func DeleteShipment(c *gin.Context) {
-	id := ps.ByName("id")
-	shipment := &model.Shipment{}
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(shipment, id).Error != nil {
-		http.NotFound(w, r)
+	shipment := &model.Shipment{}
+	if err := db.First(shipment, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(shipment).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Delete(shipment).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	utils.Response(c, http.StatusOK, fmt.Sprintf("shipment with id %s is deleted", id))
 }

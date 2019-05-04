@@ -1,106 +1,108 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	model "github.com/markthub/apis/api/server/models"
+	"github.com/markthub/apis/api/server/utils"
 	"github.com/smallnest/gen/dbmeta"
 )
 
+// GetAllProducts returns all the products
 func GetAllProducts(c *gin.Context) {
-	products := []model.Product{}
-	DB.Find(&products)
-	writeJSON(w, &products)
+	db := c.MustGet("DB").(*gorm.DB)
 
-	page, err := readInt(r, "page", 1)
+	pageParam := c.DefaultQuery("page", "0")
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	pagesize, err := readInt(r, "pagesize", 20)
-	if err != nil || pagesize <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
+		return
 	}
 	offset := (page - 1) * pagesize
 
-	order := r.FormValue("order")
-
-	products := []*model.Product{}
-
-	if order != "" {
-		err = DB.Model(&model.Product{}).Order(order).Offset(offset).Limit(pagesize).Find(&products).Error
-	} else {
-		err = DB.Model(&model.Product{}).Offset(offset).Limit(pagesize).Find(&products).Error
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	product := []*model.Product{}
+	if err = db.Model(&model.Product{}).Offset(offset).Limit(pagesize).Find(&product).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+	utils.Response(c, http.StatusOK, product)
 }
 
+// GetProduct returns a single product
 func GetProduct(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
+
 	product := &model.Product{}
-	if DB.First(product, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(product, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	writeJSON(w, product)
+	utils.Response(c, http.StatusOK, product)
 }
 
+// AddProduct creates a new product
 func AddProduct(c *gin.Context) {
 	product := &model.Product{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, product); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(product); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(product).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(product).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, product)
+	utils.Response(c, http.StatusOK, product)
 }
 
+// UpdateProduct updates a product
 func UpdateProduct(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	product := &model.Product{}
-	if DB.First(product, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(product, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Product{}
-	if err := readJSON(r, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(updated); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if err := dbmeta.Copy(product, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := DB.Save(product).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(product).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, product)
+	utils.Response(c, http.StatusOK, product)
 }
 
+// DeleteProduct deletes a product
 func DeleteProduct(c *gin.Context) {
-	id := ps.ByName("id")
-	product := &model.Product{}
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(product, id).Error != nil {
-		http.NotFound(w, r)
+	product := &model.Product{}
+	if err := db.First(product, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(product).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Delete(product).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	utils.Response(c, http.StatusOK, fmt.Sprintf("product with id %s is deleted", id))
 }

@@ -1,106 +1,111 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	model "github.com/markthub/apis/api/server/models"
+	"github.com/markthub/apis/api/server/utils"
 	"github.com/smallnest/gen/dbmeta"
 )
 
+// GetAllInvoices returns all the invoices
 func GetAllInvoices(c *gin.Context) {
-	invoices := []model.Invoice{}
-	DB.Find(&invoices)
-	writeJSON(w, &invoices)
+	db := c.MustGet("DB").(*gorm.DB)
 
-	page, err := readInt(r, "page", 1)
+	pageParam := c.DefaultQuery("page", "0")
+	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
+		return
 	}
-	pagesize, err := readInt(r, "pagesize", 20)
-	if err != nil || pagesize <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
+
 	offset := (page - 1) * pagesize
 
-	order := r.FormValue("order")
-
 	invoices := []*model.Invoice{}
-
-	if order != "" {
-		err = DB.Model(&model.Invoice{}).Order(order).Offset(offset).Limit(pagesize).Find(&invoices).Error
-	} else {
-		err = DB.Model(&model.Invoice{}).Offset(offset).Limit(pagesize).Find(&invoices).Error
-	}
+	err = db.Model(&model.Invoice{}).Offset(offset).Limit(pagesize).Find(&invoices).Error
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+	utils.Response(c, http.StatusOK, invoices)
 }
 
+// GetInvoice returns a single invoice given the number
 func GetInvoice(c *gin.Context) {
-	id := ps.ByName("id")
+	number := c.Param("number")
+	db := c.MustGet("DB").(*gorm.DB)
+
 	invoice := &model.Invoice{}
-	if DB.First(invoice, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(invoice, number).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	writeJSON(w, invoice)
+	utils.Response(c, http.StatusOK, invoice)
 }
 
+// AddInvoice creates a new invoice in the database
 func AddInvoice(c *gin.Context) {
 	invoice := &model.Invoice{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, invoice); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(invoice); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(invoice).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(invoice).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, invoice)
+	utils.Response(c, http.StatusOK, invoice)
 }
 
+// UpdateInvoice updates the invoice in the database
 func UpdateInvoice(c *gin.Context) {
-	id := ps.ByName("id")
+	number := c.Param("number")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	invoice := &model.Invoice{}
-	if DB.First(invoice, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(invoice, number).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Invoice{}
-	if err := readJSON(r, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := c.ShouldBindJSON(updated); err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if err := dbmeta.Copy(invoice, updated); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := DB.Save(invoice).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Save(invoice).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	writeJSON(w, invoice)
+	utils.Response(c, http.StatusOK, invoice)
 }
 
+// DeleteInvoice will delete the invoice from the database
 func DeleteInvoice(c *gin.Context) {
-	id := ps.ByName("id")
-	invoice := &model.Invoice{}
+	number := c.Param("number")
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(invoice, id).Error != nil {
-		http.NotFound(w, r)
+	invoice := &model.Invoice{}
+	if err := db.First(invoice, number).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(invoice).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := db.Delete(invoice).Error; err != nil {
+		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	utils.Response(c, http.StatusOK, fmt.Sprintf("invoice number %s is deleted", number))
 }

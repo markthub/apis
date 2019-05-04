@@ -29,12 +29,13 @@ func GetCustomer(c *gin.Context) {
 // AddCustomer will add a new customer
 func AddCustomer(c *gin.Context) {
 	customer := &model.Customer{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if err := readJSON(r, customer); err != nil {
+	if err := c.ShouldBindJSON(customer); err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	if err := DB.Save(customer).Error; err != nil {
+	if err := db.Save(customer).Error; err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -43,16 +44,17 @@ func AddCustomer(c *gin.Context) {
 
 // UpdateCustomer will update the customer row
 func UpdateCustomer(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
+	db := c.MustGet("DB").(*gorm.DB)
 
 	customer := &model.Customer{}
-	if DB.First(customer, id).Error != nil {
-		http.NotFound(w, r)
+	if err := db.First(customer, id).Error; err != nil {
+		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
 
 	updated := &model.Customer{}
-	if err := readJSON(r, updated); err != nil {
+	if err := c.ShouldBindJSON(updated); err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -62,7 +64,7 @@ func UpdateCustomer(c *gin.Context) {
 		return
 	}
 
-	if err := DB.Save(customer).Error; err != nil {
+	if err := db.Save(customer).Error; err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -71,14 +73,15 @@ func UpdateCustomer(c *gin.Context) {
 
 // DeleteCustomer will soft-delete a customer
 func DeleteCustomer(c *gin.Context) {
-	id := ps.ByName("id")
+	id := c.Param("id")
 	customer := &model.Customer{}
+	db := c.MustGet("DB").(*gorm.DB)
 
-	if DB.First(customer, id).Error != nil {
+	if err := db.First(customer, id).Error; err != nil {
 		utils.ResponseError(c, http.StatusNotFound, err)
 		return
 	}
-	if err := DB.Delete(customer).Error; err != nil {
+	if err := db.Delete(customer).Error; err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
