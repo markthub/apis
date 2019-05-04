@@ -10,7 +10,7 @@ OS ?= linux
 ARCH ?= amd64
 
 build:
-	GOOS=$(OS) GOARCH=$(ARCH) go build -o bin/apis -a -tags netgo -ldflags $(LDFLAGS)
+	GOOS=$(OS) GOARCH=$(ARCH) go build -o bin/markthub -a -tags netgo -ldflags $(LDFLAGS)
  
 test:
 	@go test $(PKGS)

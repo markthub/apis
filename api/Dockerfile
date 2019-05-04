@@ -12,4 +12,4 @@ RUN mkdir -p ./bin && make build
 
 EXPOSE 8000
 
-CMD ["./bin/apis", "api"]
+CMD ["./bin/apis", "server"]
