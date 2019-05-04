@@ -3,7 +3,7 @@
 The APIs are very simple and they are being written in Go using the following:
 
 - [Gin](https://github.com/gin-gonic/gin) as HTTP Framework
-- MongoDB for database
+- MySQL for database
 
 ## How to run it locally
 
