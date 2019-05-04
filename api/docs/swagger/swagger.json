@@ -1,0 +1,427 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Rest APIs for Form Payments",
+    "version": "1.0.0",
+    "title": "Form APIs",
+    "contact": {
+      "email": "davideberdin@gmail.com"
+    }
+  },
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/organizations/{orgId}/payments": {
+      "post": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Create a new payment to the database for the organization",
+        "description": "",
+        "operationId": "CreatePayment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Unique identifier of an organization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Payment object to add in the database for the organization",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Payment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Payment create successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Retrieve all the payments of an organization",
+        "description": "",
+        "operationId": "GetPayments",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Unique identifier of an organization",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Payment"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value"
+          }
+        }
+      }
+    },
+    "/organizations/{orgId}/payments/{Id}": {
+      "get": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Retrieve a single payments of an organization",
+        "description": "",
+        "operationId": "GetPayment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Unique identifier of an organization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Id",
+            "in": "path",
+            "description": "Unique identifier of a payment",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/Payment"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Update a payment of the organization",
+        "description": "",
+        "operationId": "UpdatePayment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Unique identifier of an organization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Id",
+            "in": "path",
+            "description": "Unique identifier of a payment",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Payment object that needs to be updated in the database for the organization",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Payment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Payment updated successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Delete a payment of the organization",
+        "description": "",
+        "operationId": "DeletePayment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Unique identifier of an organization",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Id",
+            "in": "path",
+            "description": "Unique identifier of a payment",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Payment object that needs to be deleted in the database for the organization",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Payment"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment deleted successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Payment": {
+      "type": "object",
+      "required": [
+        "amount",
+        "beneficiary_party",
+        "charges_information",
+        "currency",
+        "debtor_party",
+        "end_to_end_reference",
+        "fx",
+        "numeric_reference",
+        "payment_purpose",
+        "payment_scheme",
+        "payment_type",
+        "processing_date",
+        "reference",
+        "scheme_payment_sub_type",
+        "scheme_payment_type",
+        "sponsor_party"
+      ],
+      "properties": {
+        "amount": {
+          "type": "string",
+          "description": "Amount specified in the currency selected for the payment",
+          "example": "250.00"
+        },
+        "beneficiary_party": {
+          "$ref": "#/definitions/Party"
+        },
+        "charges_information": {
+          "$ref": "#/definitions/ChargesInformation"
+        },
+        "currency": {
+          "type": "string",
+          "description": "International currency name",
+          "example": "USD,EUR,GBP"
+        },
+        "debtor_party": {
+          "$ref": "#/definitions/Party"
+        },
+        "end_to_end_reference": {
+          "type": "string",
+          "description": "Reference message"
+        },
+        "fx": {
+          "$ref": "#/definitions/Fx"
+        },
+        "sponsor_party": {
+          "$ref": "#/definitions/Party"
+        }
+      }
+    },
+    "Party": {
+      "required": [
+        "account_number",
+        "bank_id",
+        "bank_id_code"
+      ],
+      "properties": {
+        "account_name": {
+          "type": "string",
+          "description": "Name of the account"
+        },
+        "account_number": {
+          "type": "string",
+          "description": "Number of the account"
+        },
+        "account_number_code": {
+          "type": "string",
+          "description": "Code of the account"
+        },
+        "account_type": {
+          "type": "number",
+          "description": "Type of the account"
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the bank account's owner"
+        },
+        "bank_id": {
+          "type": "string",
+          "description": "Specific ID of the bank"
+        },
+        "bank_id_code": {
+          "type": "string",
+          "description": "Specific ID Code of the bank"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the Owner"
+        }
+      },
+      "type": "object"
+    },
+    "Fx": {
+      "type": "object",
+      "required": [
+        "contract_reference",
+        "exchange_rate",
+        "original_amount",
+        "original_currency"
+      ],
+      "properties": {
+        "contract_reference": {
+          "type": "string",
+          "description": "Code of the contract used for this payment",
+          "example": "FX13"
+        },
+        "exchange_rate": {
+          "type": "string",
+          "description": "Exchange rate applied at the payment's moment"
+        },
+        "original_amount": {
+          "type": "string",
+          "description": "Amount due"
+        },
+        "original_currency": {
+          "type": "string",
+          "description": "Currency of the payment"
+        },
+        "numeric_reference": {
+          "type": "string",
+          "description": "Reference value",
+          "example": "1002001"
+        },
+        "payment_purpose": {
+          "type": "string",
+          "description": "Message with the payment's purpose"
+        },
+        "payment_scheme": {
+          "type": "string",
+          "description": "Code of the payment's schema"
+        },
+        "payment_type": {
+          "type": "string",
+          "description": "Type of payment"
+        },
+        "processing_date": {
+          "type": "string",
+          "description": "Date tiem value of the payment process"
+        },
+        "reference": {
+          "type": "string",
+          "description": "Reference value"
+        },
+        "scheme_payment_sub_type": {
+          "type": "string",
+          "description": "Sub type of the schema payment"
+        },
+        "scheme_payment_type": {
+          "type": "string",
+          "description": "Type of the schema payment"
+        }
+      }
+    },
+    "ChargesInformation": {
+      "type": "object",
+      "required": [
+        "bearer_code",
+        "sender_charges",
+        "receiver_charges_amount",
+        "receiver_charges_currency"
+      ],
+      "properties": {
+        "bearer_code": {
+          "type": "string",
+          "description": "Type of bearer code",
+          "example": "SHA"
+        },
+        "sender_charges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "string",
+                "description": "Amount of the charges"
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency of the charges"
+              }
+            }
+          }
+        },
+        "receiver_charges_amount": {
+          "type": "string",
+          "description": "Amount of the charges for the receiver"
+        },
+        "receiver_charges_currency": {
+          "type": "string",
+          "description": "Currency of the charges for the receiver"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+version: '2.1'
+services:
+  mysql:
+    image: mysql:5.6
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'markthub'
+      MYSQL_USER: 'markthub'
+      MYSQL_PASSWORD: 'markthub'
+      MYSQL_ROOT_PASSWORD: 'admin'
+    ports:
+      - '3306:3306'
+  api:
+    container_name: api
+    build: ./api    
+    environment:
+      DB_NAME: 'markthub'
+      DB_USER: 'markthub'
+      DB_PORT: '3306'
+      DB_PASSWORD: 'markthub'
+      DB_HOST: '127.0.0.1'
+    ports:
+      - 8000:8000
+    depends_on:
+      - mysql
