@@ -31,74 +31,71 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 
 	// Customer endpoints
 	a.POST("/customers", routes.AddCustomer)
-	a.GET("/customers/:id", routes.GetCustomer)
-	a.PUT("/customers/:id", routes.UpdateCustomer)
-	a.DELETE("/customers/:id", routes.DeleteCustomer)
+	a.GET("/customers/:customer_id", routes.GetCustomer)
+	a.PUT("/customers/:customer_id", routes.UpdateCustomer)
+	a.DELETE("/customers/:customer_id", routes.DeleteCustomer)
 
 	// User endpoints
-	a.GET("/users", routes.GetAllUsers)
 	a.POST("/users", routes.AddUser)
-	a.GET("/users/:id", routes.GetUser)
-	a.PUT("/users/:id", routes.UpdateUser)
-	a.DELETE("/users/:id", routes.DeleteUser)
+	a.GET("/users/:user_id", routes.GetUser)
+	a.PUT("/users/:user_id", routes.UpdateUser)
+	a.DELETE("/users/:user_id", routes.DeleteUser)
 
 	// Store endpoints
 	s := a.Group("/stores")
 	s.GET("/", routes.GetAllStores)
 	s.POST("/", routes.AddStore)
-	s.GET("/:id", routes.GetStore)
-	s.PUT("/:id", routes.UpdateStore)
-	s.DELETE("/:id", routes.DeleteStore)
+	s.GET("/:store_id", routes.GetStore)
+	s.PUT("/:store_id", routes.UpdateStore)
+	s.DELETE("/:store_id", routes.DeleteStore)
 
-	s.GET("/products", routes.GetAllProducts)
-	s.POST("/products", routes.AddProduct)
-	s.GET("/products/:id", routes.GetProduct)
-	s.PUT("/products/:id", routes.UpdateProduct)
-	s.DELETE("/products/:id", routes.DeleteProduct)
+	// Product endpoints
+	s.GET("/:store_id/products", routes.GetAllProducts)
+	s.POST("/:store_id/products", routes.AddProduct)
+	s.GET("/:store_id/products/:product_id", routes.GetProduct)
+	s.PUT("/:store_id/products/:product_id", routes.UpdateProduct)
+	s.DELETE("/:store_id/products/:product_id", routes.DeleteProduct)
 
 	// Order endpoints
 	o := a.Group("/orders")
 	o.GET("/", routes.GetAllOrders)
 	o.POST("/", routes.AddOrder)
-	o.GET("/:id", routes.GetOrder)
-	o.PUT("/:id", routes.UpdateOrder)
-	o.DELETE("/:id", routes.DeleteOrder)
+	o.GET("/:order_id", routes.GetOrder)
+	o.PUT("/:order_id", routes.UpdateOrder)
+	o.DELETE("/:order_id", routes.DeleteOrder)
 
-	o.GET("/items", routes.GetAllOrderItems)
-	o.POST("/items", routes.AddOrderItem)
-	o.GET("/items/:id", routes.GetOrderItem)
-	o.PUT("/items/:id", routes.UpdateOrderItem)
-	o.DELETE("/items/:id", routes.DeleteOrderItem)
+	// Order items endpoints
+	it := o.Group("/:order_id/items")
+
+	it.GET("/", routes.GetAllOrderItems)
+	it.POST("/", routes.AddOrderItem)
+	it.GET("/:item_id", routes.GetOrderItem)
+	it.PUT("/:item_id", routes.UpdateOrderItem)
+	it.DELETE("/:item_id", routes.DeleteOrderItem)
 
 	// Shipment endpoints
-	sh := o.Group("/shipments")
+	sh := o.Group("/:order_id/shipments")
 
 	sh.GET("/", routes.GetAllShipments)
 	sh.POST("/", routes.AddShipment)
-	sh.GET("/:id", routes.GetShipment)
-	sh.PUT("/:id", routes.UpdateShipment)
-	sh.DELETE("/:id", routes.DeleteShipment)
-
-	sh.GET("/items", routes.GetAllShipmentItems)
-	sh.POST("/items", routes.AddShipmentItem)
-	sh.GET("/items/:id", routes.GetShipmentItem)
-	sh.PUT("/items/:id", routes.UpdateShipmentItem)
-	sh.DELETE("/items/:id", routes.DeleteShipmentItem)
+	sh.GET("/:shipment_id", routes.GetShipment)
+	sh.PUT("/:shipment_id", routes.UpdateShipment)
+	sh.DELETE("/:shipment_id", routes.DeleteShipment)
 
 	// Invoice endpoints
-	i := o.Group("/invoices")
+	i := o.Group("/:order_id/invoices")
 
 	i.GET("/", routes.GetAllInvoices)
 	i.POST("/", routes.AddInvoice)
-	i.GET("/:id", routes.GetInvoice)
-	i.PUT("/:id", routes.UpdateInvoice)
-	i.DELETE("/:id", routes.DeleteInvoice)
+	i.GET("/:invoice_id", routes.GetInvoice)
+	i.PUT("/:invoice_id", routes.UpdateInvoice)
+	i.DELETE("/:invoice_id", routes.DeleteInvoice)
 
-	i.GET("/payments", routes.GetAllPayments)
-	i.POST("/payments", routes.AddPayment)
-	i.GET("/payments/:id", routes.GetPayment)
-	i.PUT("/payments/:id", routes.UpdatePayment)
-	i.DELETE("/payments/:id", routes.DeletePayment)
+	i.GET("/:invoice_id/payments", routes.GetAllPayments)
+	i.POST("/:invoice_id/payments", routes.AddPayment)
+	i.GET("/:invoice_id/payments/:payment_id", routes.GetPayment)
+	i.PUT("/:invoice_id/payments/:payment_id", routes.UpdatePayment)
+	i.DELETE("/:invoice_id/payments/:payment_id", routes.DeletePayment)
 
 	return r
 }
