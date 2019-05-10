@@ -5,11 +5,44 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/markthub/apis/api/server/models"
+
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/markthub/apis/api/pkg/database"
 	"github.com/markthub/apis/api/server/middleware"
 	"github.com/markthub/apis/api/server/routes"
 )
+
+func runMigrations(db *gorm.DB, debug bool) {
+	db.LogMode(debug)
+
+	db.AutoMigrate(
+		&models.Customer{}, &models.Store{},
+		&models.User{}, &models.Invoice{},
+		&models.Order{}, &models.OrderItem{},
+		&models.Payment{}, &models.ShipmentItem{},
+		&models.Product{}, &models.RefInvoiceStatusCode{},
+		&models.RefOrderItemStatusCode{}, &models.Shipment{},
+	)
+
+	// BUG in AutoMigrate. Forced to run the foreign key manually
+	// These lines will lead to an error when starting the APIs but I can safely ignore it
+	db.Model(&models.Customer{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Store{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Payment{}).AddForeignKey("invoice_number", "invoices(number)", "CASCADE", "CASCADE")
+	db.Model(&models.Invoice{}).AddForeignKey("order_id", "orders(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Invoice{}).AddForeignKey("status_code", "ref_invoice_status_codes(status_code)", "CASCADE", "CASCADE")
+	db.Model(&models.Shipment{}).AddForeignKey("order_id", "orders(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Shipment{}).AddForeignKey("invoice_number", "invoices(number)", "CASCADE", "CASCADE")
+	db.Model(&models.ShipmentItem{}).AddForeignKey("shipment_id", "shipments(id)", "CASCADE", "CASCADE")
+	db.Model(&models.ShipmentItem{}).AddForeignKey("order_item_id", "order_items(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Order{}).AddForeignKey("customer_id", "customers(id)", "CASCADE", "CASCADE")
+	db.Model(&models.Product{}).AddForeignKey("store_id", "stores(id)", "CASCADE", "CASCADE")
+	db.Model(&models.OrderItem{}).AddForeignKey("product_id", "products(id)", "CASCADE", "CASCADE")
+	db.Model(&models.OrderItem{}).AddForeignKey("order_id", "orders(id)", "CASCADE", "CASCADE")
+	db.Model(&models.OrderItem{}).AddForeignKey("status_code", "ref_order_item_status_code(status_code)", "CASCADE", "CASCADE")
+}
 
 // SetupRouter defines all the endpoints of the APIs
 func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine {
@@ -19,6 +52,7 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 
 	// get db client
 	db := database.GetDatabaseClient(dbUser, dbPassword, dbHost, dbPort, dbName)
+	runMigrations(db, true)
 
 	// Set Middleware
 	r.Use(middleware.DBClient(db))

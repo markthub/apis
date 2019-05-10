@@ -13,5 +13,8 @@ func GetDatabaseClient(user, passw, addr, port, dbName string) *gorm.DB {
 	if err != nil {
 		panic("failed to connect database: " + err.Error())
 	}
+
+	db.DB().SetMaxIdleConns(10)
+
 	return db
 }
