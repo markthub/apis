@@ -16,7 +16,7 @@ import (
 func GetAllProducts(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -34,7 +34,7 @@ func GetAllProducts(c *gin.Context) {
 
 // GetProduct returns a single product
 func GetProduct(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("product_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	product := &model.Product{}
@@ -63,7 +63,7 @@ func AddProduct(c *gin.Context) {
 
 // UpdateProduct updates a product
 func UpdateProduct(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("product_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	product := &model.Product{}
@@ -92,7 +92,7 @@ func UpdateProduct(c *gin.Context) {
 
 // DeleteProduct deletes a product
 func DeleteProduct(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("product_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	product := &model.Product{}

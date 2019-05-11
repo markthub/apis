@@ -16,9 +16,9 @@ var (
 // Invoice is the struct to represent the invoice sent to the customer
 type Invoice struct {
 	Number     string      `gorm:"column:number;primary_key" json:"number"`
-	OrderID    int         `gorm:"column:order_id" json:"order_id"`
-	StatusCode string      `gorm:"column:status_code" json:"status_code"`
-	Placed     time.Time   `gorm:"column:placed" json:"placed"`
+	OrderID    int         `gorm:"column:order_id" json:"order_id" binding:"required"`
+	StatusCode string      `gorm:"column:status_code" json:"status_code" binding:"required"`
+	Placed     time.Time   `gorm:"column:placed" json:"placed" binding:"required"`
 	Details    null.String `gorm:"column:details" json:"details"`
 	CreatedAt  null.Time   `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt  null.Time   `gorm:"column:updated_at" json:"updated_at"`

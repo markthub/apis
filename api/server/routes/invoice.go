@@ -16,7 +16,7 @@ import (
 func GetAllInvoices(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -37,7 +37,7 @@ func GetAllInvoices(c *gin.Context) {
 
 // GetInvoice returns a single invoice given the number
 func GetInvoice(c *gin.Context) {
-	number := c.Param("number")
+	number := c.Param("invoice_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	invoice := &model.Invoice{}
@@ -66,7 +66,7 @@ func AddInvoice(c *gin.Context) {
 
 // UpdateInvoice updates the invoice in the database
 func UpdateInvoice(c *gin.Context) {
-	number := c.Param("number")
+	number := c.Param("invoice_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	invoice := &model.Invoice{}
@@ -95,7 +95,7 @@ func UpdateInvoice(c *gin.Context) {
 
 // DeleteInvoice will delete the invoice from the database
 func DeleteInvoice(c *gin.Context) {
-	number := c.Param("number")
+	number := c.Param("invoice_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	invoice := &model.Invoice{}

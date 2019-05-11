@@ -63,17 +63,17 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 	a.GET("/version", routes.Version)
 	a.Static("/docs", "docs/swagger")
 
-	// Customer endpoints
-	a.POST("/customers", routes.AddCustomer)
-	a.GET("/customers/:customer_id", routes.GetCustomer)
-	a.PUT("/customers/:customer_id", routes.UpdateCustomer)
-	a.DELETE("/customers/:customer_id", routes.DeleteCustomer)
-
-	// User endpoints
+	// User endpoints (both clients and stores)
 	a.POST("/users", routes.AddUser)
 	a.GET("/users/:user_id", routes.GetUser)
 	a.PUT("/users/:user_id", routes.UpdateUser)
 	a.DELETE("/users/:user_id", routes.DeleteUser)
+
+	// Customer endpoints (clients that order grocery)
+	a.POST("/customers", routes.AddCustomer)
+	a.GET("/customers/:customer_id", routes.GetCustomer)
+	a.PUT("/customers/:customer_id", routes.UpdateCustomer)
+	a.DELETE("/customers/:customer_id", routes.DeleteCustomer)
 
 	// Store endpoints
 	s := a.Group("/stores")

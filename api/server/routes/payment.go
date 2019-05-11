@@ -16,7 +16,7 @@ import (
 func GetAllPayments(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -34,7 +34,7 @@ func GetAllPayments(c *gin.Context) {
 
 // GetPayment returns a single payment
 func GetPayment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("payment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	payment := &model.Payment{}
@@ -63,7 +63,7 @@ func AddPayment(c *gin.Context) {
 
 // UpdatePayment updates a payment
 func UpdatePayment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("payment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	payment := &model.Payment{}
@@ -92,7 +92,7 @@ func UpdatePayment(c *gin.Context) {
 
 // DeletePayment deletes a payment
 func DeletePayment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("payment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	payment := &model.Payment{}

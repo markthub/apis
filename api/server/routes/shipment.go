@@ -16,7 +16,7 @@ import (
 func GetAllShipments(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -34,7 +34,7 @@ func GetAllShipments(c *gin.Context) {
 
 // GetShipment returns a shipment
 func GetShipment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("shipment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	shipment := &model.Shipment{}
@@ -63,7 +63,7 @@ func AddShipment(c *gin.Context) {
 
 // UpdateShipment updates a shipment
 func UpdateShipment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("shipment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	shipment := &model.Shipment{}
@@ -92,7 +92,7 @@ func UpdateShipment(c *gin.Context) {
 
 // DeleteShipment deletes a shipment
 func DeleteShipment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("shipment_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	shipment := &model.Shipment{}

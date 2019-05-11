@@ -16,9 +16,9 @@ var (
 // Product is the generic object that represent a single item of the store
 type Product struct {
 	ID          int         `gorm:"column:id;primary_key" json:"id"`
-	StoreID     int         `gorm:"column:store_id" json:"store_id"`
-	Name        string      `gorm:"column:name" json:"name"`
-	Price       string      `gorm:"column:price" json:"price"`
+	StoreID     int         `gorm:"column:store_id" json:"store_id" binding:"required"`
+	Name        string      `gorm:"column:name" json:"name" binding:"required"`
+	Price       string      `gorm:"column:price" json:"price" binding:"required"`
 	Description null.String `gorm:"column:description" json:"description"`
 	CreatedAt   null.Time   `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt   null.Time   `gorm:"column:updated_at" json:"updated_at"`

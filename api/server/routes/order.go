@@ -16,7 +16,7 @@ import (
 func GetAllOrders(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -34,7 +34,7 @@ func GetAllOrders(c *gin.Context) {
 
 // GetOrder returns a single order
 func GetOrder(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("order_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	order := &model.Order{}
@@ -63,7 +63,7 @@ func AddOrder(c *gin.Context) {
 
 // UpdateOrder updates an order
 func UpdateOrder(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("order_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	order := &model.Order{}
@@ -92,7 +92,7 @@ func UpdateOrder(c *gin.Context) {
 
 // DeleteOrder deletes an order
 func DeleteOrder(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("order_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	order := &model.Order{}

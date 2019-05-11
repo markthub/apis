@@ -16,7 +16,7 @@ var (
 // User is the generic object that can be either a customer or a store
 type User struct {
 	ID        int       `gorm:"column:id;primary_key" json:"id"`
-	Username  string    `gorm:"column:username" json:"username"`
+	Username  string    `gorm:"column:username;unique" json:"username" binding:"required"`
 	CreatedAt null.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt null.Time `gorm:"column:updated_at" json:"updated_at"`
 	DeletedAt null.Time `gorm:"column:deleted_at" json:"deleted_at"`

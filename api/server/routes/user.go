@@ -13,7 +13,7 @@ import (
 
 // GetUser returns a single user
 func GetUser(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("user_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	user := &model.User{}
@@ -42,7 +42,7 @@ func AddUser(c *gin.Context) {
 
 // UpdateUser updates a user
 func UpdateUser(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("user_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	user := &model.User{}
@@ -71,7 +71,7 @@ func UpdateUser(c *gin.Context) {
 
 // DeleteUser deletes a user
 func DeleteUser(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("user_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	user := &model.User{}

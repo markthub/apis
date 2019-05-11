@@ -16,7 +16,7 @@ import (
 // GetCustomer will get a single customer
 func GetCustomer(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
-	id := c.Param("id")
+	id := c.Param("customer_id")
 
 	customer := &model.Customer{}
 	if err := db.First(customer, id).Error; err != nil {
@@ -44,7 +44,7 @@ func AddCustomer(c *gin.Context) {
 
 // UpdateCustomer will update the customer row
 func UpdateCustomer(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("customer_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	customer := &model.Customer{}
@@ -73,7 +73,7 @@ func UpdateCustomer(c *gin.Context) {
 
 // DeleteCustomer will soft-delete a customer
 func DeleteCustomer(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("customer_id")
 	customer := &model.Customer{}
 	db := c.MustGet("DB").(*gorm.DB)
 

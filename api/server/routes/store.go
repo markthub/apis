@@ -16,7 +16,7 @@ import (
 func GetAllStores(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 
-	pageParam := c.DefaultQuery("page", "0")
+	pageParam := c.DefaultQuery("page", "1")
 	page, err := strconv.ParseInt(pageParam, 10, 64)
 	if err != nil || page < 1 {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
@@ -34,7 +34,7 @@ func GetAllStores(c *gin.Context) {
 
 // GetStore returns a single store
 func GetStore(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("store_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	store := &model.Store{}
@@ -63,7 +63,7 @@ func AddStore(c *gin.Context) {
 
 // UpdateStore updates a store
 func UpdateStore(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("store_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	store := &model.Store{}
@@ -92,7 +92,7 @@ func UpdateStore(c *gin.Context) {
 
 // DeleteStore deletes a store
 func DeleteStore(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("store_id")
 	db := c.MustGet("DB").(*gorm.DB)
 
 	store := &model.Store{}
