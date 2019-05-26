@@ -15,7 +15,7 @@ var (
 
 // RefOrderItemStatusCode is a reference table
 type RefOrderItemStatusCode struct {
-	StatusCode  string      `gorm:"column:status_code;primary_key" json:"status_code"`
+	StatusCode  StatusCode  `gorm:"column:status_code;primary_key" json:"status_code"`
 	Description null.String `gorm:"column:description" json:"description"`
 }
 

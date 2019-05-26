@@ -12,6 +12,10 @@ import (
 	"github.com/smallnest/gen/dbmeta"
 )
 
+const (
+	orderNumberLength = 10
+)
+
 // GetAllOrders return all the orders
 func GetAllOrders(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
@@ -45,15 +49,27 @@ func GetOrder(c *gin.Context) {
 	utils.Response(c, http.StatusOK, order)
 }
 
-// AddOrder creates a new order
-func AddOrder(c *gin.Context) {
+// NewOrder creates a new order
+func NewOrder(c *gin.Context) {
 	order := &model.Order{}
 	db := c.MustGet("DB").(*gorm.DB)
+	// m := c.MustGet("MollieClient").(mollie.Client)
 
 	if err := c.ShouldBindJSON(order); err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
+
+	// create order
+	// orderNumber := utils.GenerateOrderNumber(orderNumberLength)
+
+	// Create Mollie Payment here
+	// TODO: REMOVE THIS!!!
+	//url := location.Get(c)
+	//baseUrl := url.Scheme + url.Host
+	// baseURL := os.Getenv("NGROK_URL") + "/checkout"
+	// paymentStatus, checkoutURL, err := AuthorizePayment(m, order, orderNumber, baseURL)
+
 	if err := db.Save(order).Error; err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, err)
 		return

@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gin-contrib/location"
 	"github.com/markthub/apis/api/server/models"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/jinzhu/gorm"
 	"github.com/markthub/apis/api/pkg/database"
 	"github.com/markthub/apis/api/server/middleware"
@@ -45,7 +47,7 @@ func runMigrations(db *gorm.DB, debug bool) {
 }
 
 // SetupRouter defines all the endpoints of the APIs
-func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine {
+func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName, mollieAPIKey string, mollieTestMode bool) *gin.Engine {
 
 	r := gin.Default()
 	r.RedirectTrailingSlash = true
@@ -56,12 +58,20 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 
 	// Set Middleware
 	r.Use(middleware.DBClient(db))
+	r.Use(location.Default())
 
 	// Grouping the Endpoints under the basic path /api
 	a := r.Group("/api")
 
 	a.GET("/version", routes.Version)
 	a.Static("/docs", "docs/swagger")
+
+	// Checkout endpoints
+	// Checkout Endpoints
+	checkout := a.Group("/checkout")
+	checkout.Use(middleware.Mollie(mollieAPIKey, mollieTestMode))
+	checkout.POST("/webhook", routes.PaymentWebhook)
+	checkout.GET("/redirect", routes.PaymentRedirectURL)
 
 	// User endpoints (both clients and stores)
 	a.POST("/users", routes.AddUser)
@@ -92,8 +102,9 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 
 	// Order endpoints
 	o := a.Group("/orders")
+	o.Use(middleware.Mollie(mollieAPIKey, mollieTestMode))
 	o.GET("/", routes.GetAllOrders)
-	o.POST("/", routes.AddOrder)
+	o.POST("/", routes.NewOrder) // Guest-Login order
 	o.GET("/:order_id", routes.GetOrder)
 	o.PUT("/:order_id", routes.UpdateOrder)
 	o.DELETE("/:order_id", routes.DeleteOrder)
@@ -135,8 +146,8 @@ func SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName string) *gin.Engine 
 }
 
 // Serve will serve the APIs on a specific address
-func Serve(addr, dbHost, dbPort, dbUser, dbPassword, dbName string) error {
-	r := SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName)
+func Serve(addr, dbHost, dbPort, dbUser, dbPassword, dbName, mollieAPIKey string, mollieTestMode bool) error {
+	r := SetupRouter(dbHost, dbPort, dbUser, dbPassword, dbName, mollieAPIKey, mollieTestMode)
 	return r.Run(addr)
 }
 
